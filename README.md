@@ -99,3 +99,27 @@ testapp_IP = 35.204.144.232
 testapp_port = 9292
 ```
 
+## Homework #5
+### Что было сделано
+* Выполнено домашнее задание
+* Выполнена самостоятельная работа
+* Выполнено задание со *
+### Как запустить проект:
+Выполнить команды:
+```
+cd packer/
+cp variables.json.example variables.json
+```
+В файле variables.json заполнить project_id.
+Выполните команды для сборки образов:
+```
+packer build -var-file=variables.json ubuntu16.json
+packer build -var-file=variables.json immutable.json
+```
+Выполните команду для запуска инстанса:
+```
+cd ../config-scripts/
+./create-redditvm.sh
+```
+### Как проверить работоспособность:
+ - Перейти по ссылке http://<EXTERNAL_IP>:9292
