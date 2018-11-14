@@ -143,3 +143,88 @@ resource "google_compute_project_metadata" "default" {
 ### Задание с **
 #### Обратите внимание
 * Балансировка происходит между двумя независимымы инстансами, не имеющих единую базу данных. Поэтому в случае выключения первого инстанса, данные с него будут не доступны на втором инстансе.
+
+## Homework #7
+### Задание со *
+Для выполнения задания был создан Google Cloud Storage Bucket. После чего разной конфигурацией файлов backend.tf состояние terraform было вынесено в каталоги terrarorm/stage и terraform/prod соответственно.
+#### Одновременное выполнение terraform apply с одним state файлом
+В результате получаем ошибку:
+```
+$ terraform apply
+Acquiring state lock. This may take a few moments...
+
+Error: Error locking state: Error acquiring the state lock: writing "gs://webdl-tf-state/terraform/stage/default.tflock" failed: googleapi: Error 412: Precondition Failed, conditionNotMet
+Lock Info:
+  ID:        1541373424497035
+  Path:      gs://webdl-tf-state/terraform/stage/default.tflock
+  Operation: OperationTypeApply
+  Who:       ubuntu@home-pc-win8
+  Version:   0.11.10
+  Created:   2018-11-04 23:17:05.4240959 +0000 UTC
+  Info:
+
+Terraform acquires a state lock to protect the state from being written
+by multiple users at the same time. Please resolve the issue above and try
+again. For most commands, you can disable locking with the "-lock=false"
+flag, but this is not recommended.
+```
+
+## Homework #8
+### Результат выполнения плейбука
+```
+(.venv) ubuntu@home-pc-win8:/mnt/d/Git/OTUS/webdl_infra/ansible$ ansible-playbook clone.yml
+
+PLAY [Clone] *********************************************************************
+
+TASK [Gathering Facts] ***********************************************************
+ok: [appserver]
+
+TASK [Clone repo] ****************************************************************
+changed: [appserver]
+
+PLAY RECAP ***********************************************************************
+appserver                  : ok=2    changed=1    unreachable=0    failed=0
+```
+В результате вы видим ok=2, что означает, что произошел сбор фактов и задача выполненилась успешно. Changed=1 означает, что после выполнения задачи конфигурация изменилась - в данном случае был проведен клон репозитория.
+
+### Динамический Inventory файл
+#### Описание
+Для реализации динамического Inventory файла был разработан скрипт на Python.
+Скрипт использует настроенное окружение Terraform для сбора данных об инстансах.
+Поддерживаемые команды: --host <host_name>, --list
+#### Настройка окружения скрипта
+Перейдите в каталог ansible:
+```
+cd ansible/
+```
+Установить Virtualenv через pip:
+```
+pip install virtualenv
+```
+ Активируйте окружение и установите зависимости:
+```
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+Задайте через переменную окружения ```ENV``` среду, над которой будут проводиться работы. Возможные значения: stage, prod.
+```
+export ENV=stage
+```
+#### Использование
+Перед проверкой убедитесь, что у вас запущено stage или prog окружение в GCP.
+
+Для проверки воспользуйтесь командой:
+```
+ansible -i inventory.py all -m ping
+```
+Если ответ выглядит как пример ниже, то можно использовать данные файл с другими модулями Ansible.
+```
+reddit-db | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+reddit-app-0 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+```

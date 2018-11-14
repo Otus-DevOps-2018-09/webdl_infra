@@ -1,21 +1,3 @@
-provider "google" {
-  version = "1.4.0"
-  project = "${var.project}"
-  region  = "${var.region}"
-}
-
-resource "google_compute_project_metadata" "default" {
-  metadata {
-    ssh-keys = "appuser1:${file(var.public_key_path)}appuser2:${file(var.public_key_path)}appuser3:${file(var.public_key_path)}"
-
-    # Использование EOF не нравится tflint!
-    # ssh-keys = <<EOF
-    # tk:${file(var.public_key_path)}
-    # appuser:${file(var.public_key_path)}
-    # appuser1:${file(var.public_key_path)}EOF
-  }
-}
-
 resource "google_compute_instance" "app" {
   count        = "${var.count}"
   name         = "reddit-app-${count.index}"
@@ -23,14 +5,10 @@ resource "google_compute_instance" "app" {
   zone         = "${var.zone}"
   tags         = ["reddit-app"]
 
-  metadata {
-    ssh-keys = "appuser:${file(var.public_key_path)}"
-  }
-
   # Определение загрузочного диска
   boot_disk {
     initialize_params {
-      image = "${var.disk_image}"
+      image = "${var.app_disk_image}"
     }
   }
 
@@ -39,8 +17,10 @@ resource "google_compute_instance" "app" {
     # сеть, к которой присоеденить данный интерфейс
     network = "default"
 
-    # использовать ephemeral IP для доступа из интернета
-    access_config {}
+    # используем статический IP адрес
+    access_config {
+      nat_ip = "${google_compute_address.app_ip.address}"
+    }
   }
 
   connection {
@@ -51,17 +31,25 @@ resource "google_compute_instance" "app" {
   }
 
   provisioner "file" {
-    source      = "files/puma.service"
+    source      = "${path.module}/files/puma.service"
     destination = "/tmp/puma.service"
   }
 
+  provisioner "file" {
+    source      = "${path.module}/files/deploy.sh"
+    destination = "/tmp/deploy.sh"
+  }
+
   provisioner "remote-exec" {
-    script = "files/deploy.sh"
+    inline = [
+      "chmod +x /tmp/deploy.sh",
+      "/tmp/deploy.sh ${var.db_host}:${var.db_port}",
+    ]
   }
 }
 
-resource "google_compute_firewall" "firewall_puma" {
-  name = "allow-puma-default"
+resource "google_compute_firewall" "app_ip" {
+  name = "reddit-app-ip"
 
   # Название сети, в которой действует правило
   network = "default"
@@ -77,4 +65,8 @@ resource "google_compute_firewall" "firewall_puma" {
 
   # Правило применимо для инстансов с перечисленными тегами
   target_tags = ["reddit-app"]
+}
+
+resource "google_compute_address" "app_ip" {
+  name = "reddit-app-ip"
 }
