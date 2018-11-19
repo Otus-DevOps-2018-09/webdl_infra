@@ -193,16 +193,14 @@ appserver                  : ok=2    changed=1    unreachable=0    failed=0
 Скрипт использует настроенное окружение Terraform для сбора данных об инстансах.
 Поддерживаемые команды: --host <host_name>, --list
 #### Настройка окружения скрипта
-Перейдите в каталог ansible:
+Перейдите в каталог ansible и установить Virtualenv через pip:
 ```
 cd ansible/
-```
-Установить Virtualenv через pip:
-```
 pip install virtualenv
 ```
- Активируйте окружение и установите зависимости:
+Создадим каталог с окружением, активируйте окружение и установите зависимости
 ```
+virtualenv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
@@ -228,3 +226,27 @@ reddit-app-0 | SUCCESS => {
     "ping": "pong"
 }
 ```
+
+## Homework #8
+### Что было сделано
+* Созданы плейбуки для настройки приложения и базы данных
+* Плейбуки разделены на несколько файлов и объединены одним плейбуком с использованием import_playbook
+* Созданы плейбуки для установки всех зависимостей на этапе создания образа
+### Пример сборки проекта
+Собираем образы:
+```
+packer build -var-file=packer/variables.json packer/db.json
+packer build -var-file=packer/variables.json packer/app.json
+```
+Поднимаем stage окружение:
+```
+cd terraform/stage
+terraform plan && terraform apply
+```
+Проводим установку и настройку приложения:
+```
+cd ../../ansible
+source .venv/bin/activate
+ansible-playbook site.yml
+```
+В результате приложение должно быть доступно по адресу http://<app_external_ip>:9292/
