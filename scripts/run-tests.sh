@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+export PATH=/usr/local/tflint/bin:$PATH
 PROJECT_PATH=`pwd`
 
 echo "******************************"
