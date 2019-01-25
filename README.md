@@ -250,3 +250,31 @@ source .venv/bin/activate
 ansible-playbook site.yml
 ```
 В результате приложение должно быть доступно по адресу http://<app_external_ip>:9292/
+
+## Homework #12
+### Что было сделано
+* Перенес созданные плейбуки в раздельные роли
+* Описал два окружения
+* Использовал коммьюнити роль nginx
+* Использовал Ansible Vault для окружения
+* Настроил проверку на TravicCI
+### Пример сборки проекта
+Собираем образы:
+```
+packer build -var-file=packer/variables.json packer/db.json
+packer build -var-file=packer/variables.json packer/app.json
+```
+Поднимаем stage окружение:
+```
+cd terraform/
+terraform init && terraform get && terraform plan && terraform apply
+cd stage/
+terraform init && terraform get && terraform plan && terraform apply
+```
+Проводим установку и настройку приложения:
+```
+cd ../../ansible
+source .venv/bin/activate
+ansible-playbook playbooks/site.yml
+```
+В результате приложение должно быть доступно по адресу http://<app_external_ip>:9292/
