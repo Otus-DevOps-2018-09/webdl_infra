@@ -2,6 +2,12 @@ Vagrant.configure("2") do |config|
     
     config.vm.provider :virtualbox do |v|
         v.memory = 512
+        # Рабочий вариант, когда файл логов работы COM-порта выводятся прямо в каталог Ansible.
+        v.customize ["modifyvm", :id, "--uartmode1", "file", "ubuntu-xenial-16.04-cloudimg-console.log"]
+        # Отключает COM-порт. Приводит к тому, что ВМ не стартурет.
+        # v.customize ["modifyvm", :id, "--uart1", "off"]
+        # Ставит режим работы порта в Отключено. Приводит к тормозам при загрузке ВМ из WSL.
+        # v.customize ["modifyvm", :id, "--uartmode1", "deactivate"]
     end
 
     config.vm.define "dbserver" do |db|

@@ -5,6 +5,11 @@ driver:
   name: vagrant
   provider:
     name: virtualbox
+  # Не получается завести Молекулу по той же причине, по которой не стартовал вагрант.
+  provider_raw_config_args:
+    - "customize: ['modifyvm', :id, '--uartmode1', 'file', 'ubuntu-xenial-16.04-cloudimg-console.log']"
+    # options:
+      # customize: ["modifyvm", :id, "--uartmode1", "file", "ubuntu-xenial-16.04-cloudimg-console.log"]
 lint:
   name: yamllint
 platforms:
